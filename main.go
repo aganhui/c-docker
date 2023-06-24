@@ -3,29 +3,27 @@ package main
 import (
 	"os"
 
-	log "github.com/Sirupsen/logrus"
+	//"github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-const usage = `mydocker is a simple container runtime implementation.
-			   The purpose of this project is to learn how docker works and how to write a docker by ourselves
-			   Enjoy it, just for fun.`
+const usage = `这是一个容器引擎`
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "mydocker"
+	app.Name = "c-docker"
 	app.Usage = usage
 
 	app.Commands = []cli.Command{
-		// initCommand,
-		// runCommand,
-		// listCommand,
-		// logCommand,
-		// execCommand,
-		// stopCommand,
-		// removeCommand,
-		// commitCommand,
-		// networkCommand,
+		runCommand,
+		initCommand,
+		commitCommand,
+		listCommand,
+		logCommand,
+		execCommand,
+		stopCommand,
+		removeCommand,
 	}
 
 	app.Before = func(context *cli.Context) error {
@@ -39,4 +37,5 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
+
 }
