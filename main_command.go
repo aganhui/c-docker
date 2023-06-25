@@ -10,6 +10,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+
+	"c-docker/network"
 )
 
 /*
@@ -80,10 +82,18 @@ var runCommand = cli.Command{
 			Name:  "d",
 			Usage: "detach container",
 		},
-		//提供run后面的-name指定的容器名字参数
+		// 提供run后面的-name指定的容器名字参数
 		cli.StringFlag{
 			Name:  "name",
 			Usage: "container name",
+		},
+		cli.StringFlag{
+			Name:  "net",
+			Usage: "container network",
+		},
+		cli.StringSliceFlag{
+			Name:  "p",
+			Usage: "port mapping",
 		},
 	},
 	Action: func(context *cli.Context) error {
@@ -99,14 +109,16 @@ var runCommand = cli.Command{
 		if tty && detach {
 			return fmt.Errorf("ti and d parameter can not both provided")
 		}
-		//cmd := context.Args().Get(0)
+		// cmd := context.Args().Get(0)
 		resourceConf := &ResourceConfig{
 			memoryMax: context.String("m"),
 		}
 		volume := context.String("v")
 		containerName := context.String("name")
-		Run(tty, cmdArray, resourceConf, volume, containerName)
-		//Run(tty, cmdArray)
+		network := context.String("net")
+		portmapping := context.StringSlice("p")
+		Run(tty, cmdArray, resourceConf, volume, containerName, network, portmapping)
+		// Run(tty, cmdArray)
 		return nil
 	},
 }
@@ -140,11 +152,11 @@ var listCommand = cli.Command{
 	Name:  "ps",
 	Usage: "list all the containers",
 	Action: func(context *cli.Context) error {
-		//ListContainers()
-		//找到存储容器信息的路径/var/run/mydocker
+		// ListContainers()
+		// 找到存储容器信息的路径/var/run/mydocker
 		dirURL := fmt.Sprintf(DefaultInfoLocation, "")
 		dirURL = dirURL[:len(dirURL)-1]
-		//读取该文件夹下的所有文件
+		// 读取该文件夹下的所有文件
 		files, err := ioutil.ReadDir(dirURL)
 		if err != nil {
 			log.Errorf("Read dir %s error %v", dirURL, err)
@@ -159,8 +171,8 @@ var listCommand = cli.Command{
 			}
 			containers = append(containers, tmpContainer)
 		}
-		//使用tabwrite.NewWrite在控制台打印出容器信息
-		//tabwrite是引用text/tabwriter类库，用于在控制台打印对齐的表哥
+		// 使用tabwrite.NewWrite在控制台打印出容器信息
+		// tabwrite是引用text/tabwriter类库，用于在控制台打印对齐的表哥
 		w := tabwriter.NewWriter(os.Stdout, 12, 1, 3, ' ', 0)
 		fmt.Fprintf(w, "ID\tNAME\tPID\tSTATUS\tCOMMAND\tCREATED\n")
 		for _, item := range containers {
@@ -172,7 +184,7 @@ var listCommand = cli.Command{
 				item.Command,
 				item.CreatedTime)
 		}
-		//刷新标准输出流缓存区，将容器列表打印出来
+		// 刷新标准输出流缓存区，将容器列表打印出来
 		if err := w.Flush(); err != nil {
 			log.Errorf("Flush error %v", err)
 			return nil
@@ -198,8 +210,7 @@ var execCommand = cli.Command{
 	Name:  "exec",
 	Usage: "exec a command into cotainer",
 	Action: func(context *cli.Context) error {
-
-		//如果没有设置pid，那么ns切换将不能实现，需要先设置然后再继续
+		// 如果没有设置pid，那么ns切换将不能实现，需要先设置然后再继续
 		if os.Getenv("mycontainer_pid") == "" {
 			if len(context.Args()) < 2 {
 				log.Errorf("Missing container name or command")
@@ -215,7 +226,7 @@ var execCommand = cli.Command{
 				log.Errorf("get container pid by name failed%v", err)
 				return nil
 			}
-			//totalCmdstr := strings.Join(context.Args(), " ")
+			// totalCmdstr := strings.Join(context.Args(), " ")
 			cmd := exec.Command("/proc/self/exe", "exec")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
@@ -236,7 +247,7 @@ var execCommand = cli.Command{
 	},
 }
 
-//期望调用的是"main stop 容器名"这种方式，需要在开始的时候检测是否输入了容器名
+// 期望调用的是"main stop 容器名"这种方式，需要在开始的时候检测是否输入了容器名
 var stopCommand = cli.Command{
 	Name:  "stop",
 	Usage: "stop a container",
@@ -260,5 +271,65 @@ var removeCommand = cli.Command{
 		containerName := context.Args().Get(0)
 		removeContainer(containerName)
 		return nil
+	},
+}
+
+var networkCommand = cli.Command{
+	Name:  "network",
+	Usage: "container network commands",
+	Subcommands: []cli.Command{
+		{
+			Name:  "create",
+			Usage: "create a container network",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "driver",
+					Usage: "network driver",
+				},
+				cli.StringFlag{
+					Name:  "subnet",
+					Usage: "subnet cidr",
+				},
+			},
+			Action: func(context *cli.Context) error {
+				if len(context.Args()) < 1 {
+					return fmt.Errorf("Missing network name")
+				}
+				network.Init()
+				err := network.CreateNetwork(
+					context.String("driver"),
+					context.String("subnet"),
+					context.Args()[0],
+				)
+				if err != nil {
+					return fmt.Errorf("create network error: %+v", err)
+				}
+				return nil
+			},
+		},
+		{
+			Name:  "list",
+			Usage: "list container network",
+			Action: func(context *cli.Context) error {
+				network.Init()
+				network.ListNetwork()
+				return nil
+			},
+		},
+		{
+			Name:  "remove",
+			Usage: "remove container network",
+			Action: func(context *cli.Context) error {
+				if len(context.Args()) < 1 {
+					return fmt.Errorf("Missing network name")
+				}
+				network.Init()
+				err := network.DeleteNetwork(context.Args()[0])
+				if err != nil {
+					return fmt.Errorf("remove network error: %+v", err)
+				}
+				return nil
+			},
+		},
 	},
 }

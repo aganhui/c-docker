@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 
-	//"github.com/Sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -24,6 +23,7 @@ func main() {
 		execCommand,
 		stopCommand,
 		removeCommand,
+		networkCommand,
 	}
 
 	app.Before = func(context *cli.Context) error {
@@ -37,5 +37,4 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-
 }

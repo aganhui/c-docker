@@ -13,6 +13,5 @@ func commitContainer(imageName string) {
 	fmt.Print("%s", imageTar)
 	if _, err := exec.Command("tar", "-czf", imageTar, "-C", globalMntURL, ".").CombinedOutput(); err != nil {
 		log.Errorf("Tar folder %s error %v", globalMntURL, err)
-
 	}
 }

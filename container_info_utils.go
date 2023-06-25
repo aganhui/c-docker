@@ -19,15 +19,17 @@ import (
 */
 //定义了容器引擎中可以用到的结构体
 type ContainerInfo struct {
-	Pid         string `json:"pid"`        //容器init进程在宿主机上的PID
-	Id          string `json:"id"`         //容器id
-	Name        string `json:"name"`       //容器名
-	Command     string `json:"command"`    //容器内init进程的运行命令
-	CreatedTime string `json:"createTime"` //创建时间
-	Status      string `json:"status"`     //容器的状态
+	Pid         string   `json:"pid"`         // 容器init进程在宿主机上的PID
+	Id          string   `json:"id"`          // 容器id
+	Name        string   `json:"name"`        // 容器名
+	Command     string   `json:"command"`     // 容器内init进程的运行命令
+	CreatedTime string   `json:"createTime"`  // 创建时间
+	Status      string   `json:"status"`      // 容器的状态
+	Volume      string   `json:"volume"`      // 容器的数据卷
+	PortMapping []string `json:"portmapping"` // 端口映射
 }
 
-//一些常量的定义,在程序内部使用，不能被随意更改
+// 一些常量的定义,在程序内部使用，不能被随意更改
 var (
 	RUNNING             string = "running"
 	STOP                string = "stopped"
@@ -36,10 +38,15 @@ var (
 	ConfigName          string = globalConfigName
 )
 
-func recordContainerInfo(containerPID int, commandArray []string, containerName string, id string) (string, error) {
-	//首先生成10位的数字的容器ID
-	//id := randStringBytes(10)
-	//以当前时间为容器创建时间
+func recordContainerInfo(
+	containerPID int,
+	commandArray []string,
+	containerName string,
+	id string,
+) (string, error) {
+	// 首先生成10位的数字的容器ID
+	// id := randStringBytes(10)
+	// 以当前时间为容器创建时间
 	createTime := time.Now().Format("2006-01-02 15:04:05")
 	command := strings.Join(commandArray, "")
 	//如果用户不指定容器名，那么就以容器id当作容器名
@@ -55,31 +62,30 @@ func recordContainerInfo(containerPID int, commandArray []string, containerName 
 		Status:      RUNNING,
 		Name:        containerName,
 	}
-	//将容器信息的对象json序列化成字符串
+	// 将容器信息的对象json序列化成字符串
 	jsonBytes, err := json.Marshal(containerInfo)
 	if err != nil {
 		log.Errorf("Record container info error %v", err)
 		return "", err
 	}
 	jsonStr := string(jsonBytes)
-	//拼凑一下存储容器信息的路径
+	// 拼凑一下存储容器信息的路径
 	dirUrl := fmt.Sprintf(DefaultInfoLocation, containerName)
 	log.Info("createJsonPath: " + dirUrl)
-	//如果该路径不存在，就级联地全部创建
+	// 如果该路径不存在，就级联地全部创建
 	if err := os.MkdirAll(dirUrl, 0622); err != nil {
 		log.Errorf("Mkdir error %s error %v", dirUrl, err)
 		return "", err
 	}
-	//fileName := dirUrl + "/" + ConfigName
+	// fileName := dirUrl + "/" + ConfigName
 	fileName := path.Join(dirUrl, ConfigName)
-	//创建最终的配置文件——config.json文件
+	// 创建最终的配置文件——config.json文件
 	file, err := os.Create(fileName)
-
 	if err != nil {
 		log.Errorf("Create file %s error %v", fileName, err)
 		return "", err
 	}
-	//将json化后的数据写入到文件中
+	// 将json化后的数据写入到文件中
 	if _, err := file.WriteString(jsonStr); err != nil {
 		log.Errorf("File write string error %v", err)
 		return "", err
@@ -109,7 +115,7 @@ func randStringBytes(n int) string {
 }
 
 func getContainerInfo(containerName string) (*ContainerInfo, error) {
-	//containerName := file.Name()
+	// containerName := file.Name()
 	configFileDir := fmt.Sprintf(DefaultInfoLocation, containerName)
 	configFileDir = path.Join(configFileDir, globalConfigName)
 	content, err := ioutil.ReadFile(configFileDir)
@@ -123,7 +129,6 @@ func getContainerInfo(containerName string) (*ContainerInfo, error) {
 		return nil, err
 	}
 	return &containerInfo, nil
-
 }
 
 func getContainerPidByName(containerName string) (string, error) {
@@ -147,15 +152,14 @@ func getContainerPidByName(containerName string) (string, error) {
 	return containerInfo.Pid, nil
 }
 
-//根据容器名获取对应的struct结构
+// 根据容器名获取对应的struct结构
 func getContainerInfoByName(containerName string) (*ContainerInfo, error) {
-	//dirURL := fmt.Sprintf(DefaultInfoLocation, containerName)
-	//configFilePath := path.Join(dirURL, globalConfigName)
+	// dirURL := fmt.Sprintf(DefaultInfoLocation, containerName)
+	// configFilePath := path.Join(dirURL, globalConfigName)
 	containerinfo, err := getContainerInfo(containerName)
 	if err != nil {
 		log.Errorf("GetContainerInfoByNameFailed%v", err)
 		return nil, err
 	}
 	return containerinfo, nil
-
 }
