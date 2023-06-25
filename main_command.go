@@ -63,16 +63,40 @@ var runCommand = cli.Command{
 			Usage: "enable tty",
 		},
 		cli.StringFlag{
-			Name:  "m",
-			Usage: "memory limit",
-		},
-		cli.StringFlag{
 			Name:  "cpushare",
 			Usage: "cpushare limit",
 		},
 		cli.StringFlag{
 			Name:  "cpuset",
 			Usage: "cpuset limit",
+		},
+		cli.StringFlag{
+			Name:  "cpumax",
+			Usage: "cpumax limit",
+		},
+		cli.StringFlag{
+			Name:  "m",
+			Usage: "memory max limit",
+		},
+		cli.StringFlag{
+			Name:  "mb",
+			Usage: "memory max limit in bytes",
+		},
+		cli.StringFlag{
+			Name:  "blkrbps",
+			Usage: "blkio read bps.",
+		},
+		cli.StringFlag{
+			Name:  "blkwbps",
+			Usage: "blkio write bps",
+		},
+		cli.StringFlag{
+			Name:  "netClsClassid",
+			Usage: "net cls classid info",
+		},
+		cli.StringFlag{
+			Name:  "netPrioIfpriomap",
+			Usage: "net priority if priomap",
 		},
 		cli.StringFlag{
 			Name:  "v",
@@ -111,7 +135,15 @@ var runCommand = cli.Command{
 		}
 		// cmd := context.Args().Get(0)
 		resourceConf := &ResourceConfig{
+			cpuShare: context.String("cpushare"),
+			cpuSets: context.String("cpuset"),
+			cpuMax: context.String("cpumax"),
+			memoryLimitBytes: context.String("mb"),
 			memoryMax: context.String("m"),
+			blkioReadBps: context.String("blkrbps"),
+			blkioWriteBps: context.String("blkwbps"),
+			netClsClassid: context.String("netClsClassid"),
+			netPrioIfpriomap: context.String("netPrioIfpriomap"),
 		}
 		volume := context.String("v")
 		containerName := context.String("name")

@@ -13,16 +13,38 @@ import (
 /***********
 当前设计只支持cgroupv2，对cgroupv1暂不支持
 ***********/
-//用于传递资源限制配置的结构体，包含内存限制，CPU时间片权重，CPU核心数
+// 用于传递资源限制配置的结构体，包含内存限制，CPU时间片权重，CPU核心数
+// 请注意这些控制功能可能并不是每台机器都有，请酌情选取
 type ResourceConfig struct {
-	memoryMax string
+	// CPU Limit.
 	cpuShare  string
+	cpuSets string
+	cpuMax string
+	// Memory Limit.
+	memoryLimitBytes string
+	memoryMax string
+	// blkio Limit.
+	blkioReadBps string
+	blkioWriteBps string
+	// net work width limit.
+	netClsClassid string
+	netPrioIfpriomap string
 }
 
 func NewDefaultResourceConfig() ResourceConfig {
 	return ResourceConfig{
-		memoryMax: "",
 		cpuShare:  "",
+		cpuSets: "",
+		cpuMax: "",
+		// Memory Limit.
+		memoryLimitBytes: "",
+		memoryMax: "",
+		// blkio Limit.
+		blkioReadBps: "",
+		blkioWriteBps: "",
+		// net work width limit.
+		netClsClassid: "",
+		netPrioIfpriomap: "",
 	}
 }
 
@@ -102,14 +124,94 @@ func (s *CgroupV2Manager) Set(res *ResourceConfig) error {
 			return fmt.Errorf("failed to get cgroup v2 path", err)
 		}
 	}
-	//print("max" + res.memoryMax)
+	// ----------------------------------------------------------------
+	// author: linke song.
+	// cpu: cpu.shares, cpu.cfs_quota_us, cpu.cfs_period_us, cpu.max
+	// ----------------------------------------------------------------
+	// cpu, memory, blkio, network, device, pids, filesystem
+	// ----------------------------------------------------------------
+	// Resources:
+	// ----------------------------------------------------------------
+	// CPU:
+	// cpuShare  string
+	// cpuSets string
+	// cpuMax string
+	// Memory:
+	// Memory Limit.
+	// memoryLimitBytes string
+	// memoryMax string
+	// Blkio:
+	// blkio Limit.
+	// blkioReadBps string
+	// blkioWriteBps string
+	// // net work width limit.
+	// netClsClassid string
+	// netPrioIfpriomap string
+	// 
+	// -----------------------------------------------
+	// 1. cpu.shares. -> 表示进程所分配到的最大CPU份额
+	// fmt.Print(s.path)
+	if res.cpuShare != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "cpu.shares"), []byte(res.cpuShare), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 cpu share failed")
+		}
+	}
+	// 2. cpuset.cpus. -> 指定一个任务可以运行在哪些CPU核心上
+	if res.cpuSets != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "cpuset.cpus"), []byte(res.cpuSets), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 cpu set failed")
+		}
+	}
+	// 3. cpu.max. -> 指定一个任务最大CPU限制
+	if res.cpuSets != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "cpu.max"), []byte(res.cpuMax), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 cpu max failed")
+		}
+	}
+	// 4. memoryLimitBytes. -> 与memory max的不同在于前者可以继承，后者可以单独设立 
+	if res.memoryLimitBytes != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "memory.limit_in_bytes"), []byte(res.memoryLimitBytes), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 memory limit failed")
+		}
+	}
+	// 5. memoryMax. -> 内存最大分配值
 	if res.memoryMax != "" {
-		//print("set" + s.path)
 		if err := ioutil.WriteFile(path.Join(s.path, "memory.max"), []byte(res.memoryMax), 0644); err != nil {
 			fmt.Print(err)
 			return fmt.Errorf("set cgroup v2 memory max failed")
 		}
-
+	}
+	// 6. blkioReadBps. -> 块设备读带宽
+	if res.blkioReadBps != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "blkio.throttle.read_bps_device"), []byte(res.blkioReadBps), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 blk readbps failed")
+		}
+	}
+	// 7. blkioWriteBps. -> 块设备写带宽
+	if res.blkioWriteBps != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "blkio.throttle.write_bps_device"), []byte(res.blkioWriteBps), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 blk writebps failed")
+		}
+	}
+	// 8. netClsClassid. -> 网络传输带宽限制
+	if res.netClsClassid != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "net_cls.classid"), []byte(res.netClsClassid), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 net_cls classid failed")
+		}
+	}
+	// 9. netPrioIfpriomap. -> 网络接口传输带宽限制
+	if res.netPrioIfpriomap != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "net_prio.ifpriomap"), []byte(res.netPrioIfpriomap), 0644); err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("set cgroup v2 net_prio ifpriomap failed")
+		}
 	}
 	return nil
 }
