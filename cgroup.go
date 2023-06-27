@@ -165,7 +165,7 @@ func (s *CgroupV2Manager) Set(res *ResourceConfig) error {
 		}
 	}
 	// 3. cpu.max. -> 指定一个任务最大CPU限制
-	if res.cpuSets != "" {
+	if res.cpuMax != "" {
 		if err := ioutil.WriteFile(path.Join(s.path, "cpu.max"), []byte(res.cpuMax), 0644); err != nil {
 			fmt.Print(err)
 			return fmt.Errorf("set cgroup v2 cpu max failed")
