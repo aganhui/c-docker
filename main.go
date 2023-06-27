@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	//"github.com/Sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -15,15 +16,14 @@ func main() {
 	app.Usage = usage
 
 	app.Commands = []cli.Command{
-		runCommand,
 		initCommand,
-		commitCommand,
+		runCommand,
 		listCommand,
 		logCommand,
 		execCommand,
 		stopCommand,
 		removeCommand,
-		networkCommand,
+		commitCommand,
 	}
 
 	app.Before = func(context *cli.Context) error {
