@@ -13,12 +13,12 @@ if [ "$arg" == "create" ]; then
   sudo ./$exe network list
 elif [ "$arg" == "run1" ]; then
   echo "run container 1 .."
-  sudo ./$exe run -ti -p 80:80 --net $net /bin/bash
+  sudo ./$exe run -ti --name ygh busybox -p 80:80 --net $net /bin/bash
   # ip addr
 elif [ "$arg" == "run2" ]; then
   echo "run container 2 .."
   # 创建多个容器，测试容器之间的网络互通性
-  sudo ./$exe run -ti -p 81:81 --net $net /bin/bash
+  sudo ./$exe run -ti --name ygh busybox -p 81:81 --net $net /bin/bash
   # ping <ip>
 elif [ "$arg" == "remove" ]; then
   echo "remove net..."

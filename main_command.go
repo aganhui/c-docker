@@ -63,16 +63,32 @@ var runCommand = cli.Command{
 			Usage: "enable tty",
 		},
 		cli.StringFlag{
-			Name:  "m",
-			Usage: "memory limit",
-		},
-		cli.StringFlag{
-			Name:  "cpushare",
-			Usage: "cpushare limit",
+			Name:  "cpuweight",
+			Usage: "cpuweight limit",
 		},
 		cli.StringFlag{
 			Name:  "cpuset",
 			Usage: "cpuset limit",
+		},
+		cli.StringFlag{
+			Name:  "cpumax",
+			Usage: "cpumax limit",
+		},
+		cli.StringFlag{
+			Name:  "m",
+			Usage: "memory max limit",
+		},
+		cli.StringFlag{
+			Name:  "min",
+			Usage: "memoroy min limit",
+		},
+		cli.StringFlag{
+			Name:  "pidsmax",
+			Usage: "pids max limit",
+		},
+		cli.StringFlag{
+			Name:  "rdmamax",
+			Usage: "rdma max limit",
 		},
 		cli.StringFlag{
 			Name:  "v",
@@ -115,7 +131,13 @@ var runCommand = cli.Command{
 		}
 		// cmd := context.Args().Get(0)
 		resourceConf := &ResourceConfig{
+			cpuWeight: context.String("cpuweight"),
+			cpuSets:   context.String("cpuset"),
+			cpuMax:    context.String("cpumax"),
+			memoryMin: context.String("min"),
 			memoryMax: context.String("m"),
+			pidsMax:   context.String("pidsmax"),
+			rdmaMax:   context.String("rdmamax"),
 		}
 		volume := context.String("v")
 		containerName := context.String("name")

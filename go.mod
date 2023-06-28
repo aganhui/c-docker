@@ -5,8 +5,8 @@ go 1.18
 require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli v1.22.14
-	github.com/vishvananda/netlink v1.1.0
-	github.com/vishvananda/netns v0.0.4
+	github.com/vishvananda/netlink v0.0.0-20170105235913-1890b34fa39d
+	github.com/vishvananda/netns v0.0.0-20161219181606-2c9454e4fc6e
 )
 
 require (
