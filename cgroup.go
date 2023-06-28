@@ -17,34 +17,30 @@ import (
 // 请注意这些控制功能可能并不是每台机器都有，请酌情选取
 type ResourceConfig struct {
 	// CPU Limit.
-	cpuShare  string
+	cpuWeight  string
 	cpuSets string
 	cpuMax string
 	// Memory Limit.
-	memoryLimitBytes string
+	memoryMin string
 	memoryMax string
-	// blkio Limit.
-	blkioReadBps string
-	blkioWriteBps string
-	// net work width limit.
-	netClsClassid string
-	netPrioIfpriomap string
+	// pids limit.
+	pidsMax string
+	// rdma limit
+	rdmaMax string
 }
 
 func NewDefaultResourceConfig() ResourceConfig {
 	return ResourceConfig{
-		cpuShare:  "",
+		cpuWeight:  "",
 		cpuSets: "",
 		cpuMax: "",
 		// Memory Limit.
-		memoryLimitBytes: "",
+		memoryMin: "",
 		memoryMax: "",
-		// blkio Limit.
-		blkioReadBps: "",
-		blkioWriteBps: "",
-		// net work width limit.
-		netClsClassid: "",
-		netPrioIfpriomap: "",
+		// pids limit.
+		pidsMax: "",
+		// pids limit.
+		rdmaMax: "",
 	}
 }
 
@@ -133,26 +129,23 @@ func (s *CgroupV2Manager) Set(res *ResourceConfig) error {
 	// Resources:
 	// ----------------------------------------------------------------
 	// CPU:
-	// cpuShare  string
+	// cpuWeight  string
 	// cpuSets string
 	// cpuMax string
 	// Memory:
 	// Memory Limit.
-	// memoryLimitBytes string
+	// memoryMin string
 	// memoryMax string
-	// Blkio:
-	// blkio Limit.
-	// blkioReadBps string
-	// blkioWriteBps string
-	// // net work width limit.
-	// netClsClassid string
-	// netPrioIfpriomap string
+	// Pids:
+	// pidsMax string.
+	// rdma:
+	// rdmaMax string
 	// 
 	// -----------------------------------------------
-	// 1. cpu.shares. -> 表示进程所分配到的最大CPU份额
+	// 1. cpu.weight. -> 表示进程所分配到的最大CPU份额
 	// fmt.Print(s.path)
-	if res.cpuShare != "" {
-		if err := ioutil.WriteFile(path.Join(s.path, "cpu.shares"), []byte(res.cpuShare), 0644); err != nil {
+	if res.cpuWeight != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "cpu.weight"), []byte(res.cpuWeight), 0644); err != nil {
 			fmt.Print(err)
 			return fmt.Errorf("set cgroup v2 cpu share failed")
 		}
@@ -171,9 +164,9 @@ func (s *CgroupV2Manager) Set(res *ResourceConfig) error {
 			return fmt.Errorf("set cgroup v2 cpu max failed")
 		}
 	}
-	// 4. memoryLimitBytes. -> 与memory max的不同在于前者可以继承，后者可以单独设立 
-	if res.memoryLimitBytes != "" {
-		if err := ioutil.WriteFile(path.Join(s.path, "memory.limit_in_bytes"), []byte(res.memoryLimitBytes), 0644); err != nil {
+	// 4. memoryMin.
+	if res.memoryMin != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "memory.min"), []byte(res.memoryMin), 0644); err != nil {
 			fmt.Print(err)
 			return fmt.Errorf("set cgroup v2 memory limit failed")
 		}
@@ -185,32 +178,18 @@ func (s *CgroupV2Manager) Set(res *ResourceConfig) error {
 			return fmt.Errorf("set cgroup v2 memory max failed")
 		}
 	}
-	// 6. blkioReadBps. -> 块设备读带宽
-	if res.blkioReadBps != "" {
-		if err := ioutil.WriteFile(path.Join(s.path, "blkio.throttle.read_bps_device"), []byte(res.blkioReadBps), 0644); err != nil {
+	// 6. pidsMax.
+	if res.pidsMax != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "pids.max"), []byte(res.pidsMax), 0644); err != nil {
 			fmt.Print(err)
 			return fmt.Errorf("set cgroup v2 blk readbps failed")
 		}
 	}
-	// 7. blkioWriteBps. -> 块设备写带宽
-	if res.blkioWriteBps != "" {
-		if err := ioutil.WriteFile(path.Join(s.path, "blkio.throttle.write_bps_device"), []byte(res.blkioWriteBps), 0644); err != nil {
+	// 7. rdmaMax.
+	if res.rdmaMax != "" {
+		if err := ioutil.WriteFile(path.Join(s.path, "rdma.max"), []byte(res.rdmaMax), 0644); err != nil {
 			fmt.Print(err)
 			return fmt.Errorf("set cgroup v2 blk writebps failed")
-		}
-	}
-	// 8. netClsClassid. -> 网络传输带宽限制
-	if res.netClsClassid != "" {
-		if err := ioutil.WriteFile(path.Join(s.path, "net_cls.classid"), []byte(res.netClsClassid), 0644); err != nil {
-			fmt.Print(err)
-			return fmt.Errorf("set cgroup v2 net_cls classid failed")
-		}
-	}
-	// 9. netPrioIfpriomap. -> 网络接口传输带宽限制
-	if res.netPrioIfpriomap != "" {
-		if err := ioutil.WriteFile(path.Join(s.path, "net_prio.ifpriomap"), []byte(res.netPrioIfpriomap), 0644); err != nil {
-			fmt.Print(err)
-			return fmt.Errorf("set cgroup v2 net_prio ifpriomap failed")
 		}
 	}
 	return nil
