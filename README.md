@@ -9,4 +9,5 @@ docker engine for group assignment of Cloud Computing Class(2023 spring)
 ./build.sh
 
 ### run
-sudo ./build/c-docker run -ti sh
+cd ./build
+sudo ./c-docker run -ti --name ygh busybox /bin/sh 
