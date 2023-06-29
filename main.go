@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 
-	//"github.com/Sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -25,6 +24,7 @@ func main() {
 		stopCommand,
 		removeCommand,
 		commitCommand,
+		networkCommand,
 	}
 
 	app.Before = func(context *cli.Context) error {

@@ -5,15 +5,23 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
+
+	"c-docker/network"
 )
 
-func NewParentProcess(tty bool, containerName string, volume string, imageName string) (*exec.Cmd, *os.File) {
-	//args := []string{"init", command}
-	//创建新的管道
+func NewParentProcess(
+	tty bool,
+	containerName string,
+	volume string,
+	imageName string,
+) (*exec.Cmd, *os.File) {
+	// args := []string{"init", command}
+	// 创建新的管道
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		log.Print(err)
@@ -43,10 +51,10 @@ func NewParentProcess(tty bool, containerName string, volume string, imageName s
 			log.Errorf("NewParentProcess mkdir %s error %v", dirURL, err)
 			return nil, nil
 		}
-		//log.Info("pathName%s", globalLogName)
+		// log.Info("pathName%s", globalLogName)
 		log.Info("dirurl%s", containerName)
 		stdLogFilePath := path.Join(dirURL, globalLogName)
-		//log.Info("build config in dir %s", stdLogFilePath)
+		// log.Info("build config in dir %s", stdLogFilePath)
 		stdLogFile, err := os.Create(stdLogFilePath)
 		if err != nil {
 			log.Errorf("NewParentProcess create file %s error %v", stdLogFile, err)
@@ -71,8 +79,16 @@ func NewParentProcess(tty bool, containerName string, volume string, imageName s
 	return cmd, writePipe
 }
 
-func Run(tty bool, comArray []string, res *ResourceConfig, volume string, containerName string, imageName string) {
-
+func Run(
+	tty bool,
+	comArray []string,
+	res *ResourceConfig,
+	volume string,
+	containerName string,
+	imageName string,
+	nw string,
+	portmapping []string,
+) {
 	containerId := randStringBytes(10)
 	if containerName == "" {
 		containerName = containerId
@@ -86,23 +102,43 @@ func Run(tty bool, comArray []string, res *ResourceConfig, volume string, contai
 		fmt.Print("error in parent start")
 		log.Error(err)
 	}
-	//记录容器信息
-	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName, containerId, volume)
+	// 记录容器信息
+	containerName, err := recordContainerInfo(
+		parent.Process.Pid,
+		comArray,
+		containerName,
+		containerId,
+		volume,
+	)
 	if err != nil {
 		log.Errorf("Record container info error %v", err)
 		return
 	}
-	//记录容器信息结束
+	// 记录容器信息结束
 	command := strings.Join(comArray, " ")
 	log.Infof("command all is %s", command)
 	writePipe.WriteString(command)
 	writePipe.Close()
 	cgroupmanager := getDefaultCgroupV2Manager()
 	defer cgroupmanager.Destory()
-	//没有准备初始化函数，所以需要手动设置一下变量
+	// 没有准备初始化函数，所以需要手动设置一下变量
 	cgroupmanager.relativepath = "c-docker-cgroup"
 	cgroupmanager.Set(res)
 	cgroupmanager.Apply(parent.Process.Pid)
+	if nw != "" {
+		// config container network
+		network.Init()
+		containerInfo := &network.ContainerInfo{
+			Id:          containerId,
+			Pid:         strconv.Itoa(parent.Process.Pid),
+			Name:        containerName,
+			PortMapping: portmapping,
+		}
+		if err := network.Connect(nw, containerInfo); err != nil {
+			log.Errorf("Error Connect Network %v", err)
+			return
+		}
+	}
 	if tty {
 		parent.Wait()
 		os.Chdir(globalExeLocation)
