@@ -9,10 +9,12 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+
+	"c-docker/config"
 )
 
 // const ipamPath = "/var/run/mydocker/network/ipam/subnet.json"
-var ipamPath = fmt.Sprintf("%s/ipam/subnet.json", globalDefaultNetwork)
+var ipamPath = fmt.Sprintf("%s/ipam/subnet.json", config.GlobalDefaultNetwork)
 
 type IPAM struct {
 	AllocatorPath string

@@ -1,4 +1,4 @@
-package main
+package container
 
 import (
 	"fmt"
@@ -13,13 +13,12 @@ import (
 )
 
 func RunContainerInitProcess() error {
-
 	cmdArray := readUserCommand()
 	if cmdArray == nil || len(cmdArray) == 0 {
 		return fmt.Errorf("Run container get user command error, cmdArray is nil")
 	}
-	//defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV | syscall.MS_PRIVATE | syscall.MS_REC
-	//syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
+	// defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV | syscall.MS_PRIVATE | syscall.MS_REC
+	// syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
 	setUpMount()
 	path, err := exec.LookPath(cmdArray[0])
 	if err != nil {
@@ -63,7 +62,8 @@ func readUserCommand() []string {
 	return strings.Split(msgStr, " ")
 }
 
-/**
+/*
+*
 Init 挂载点
 */
 func setUpMount() {
@@ -75,13 +75,19 @@ func setUpMount() {
 	log.Infof("Current location is %s", pwd)
 	pivotRoot(pwd)
 
-	//mount proc
+	// mount proc
 	defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
 	if err := syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), ""); err != nil {
 		log.Errorf("error %v", err)
 	}
 
-	syscall.Mount("tmpfs", "/dev", "tmpfs", syscall.MS_NOSUID|syscall.MS_STRICTATIME|syscall.MS_PRIVATE|syscall.MS_REC, "mode=755")
+	syscall.Mount(
+		"tmpfs",
+		"/dev",
+		"tmpfs",
+		syscall.MS_NOSUID|syscall.MS_STRICTATIME|syscall.MS_PRIVATE|syscall.MS_REC,
+		"mode=755",
+	)
 }
 
 func pivotRoot(root string) error {
@@ -111,9 +117,9 @@ func pivotRoot(root string) error {
 	}
 	// pivot_root 到新的rootfs, 现在老的 old_root 是挂载在rootfs/.pivot_root
 	// 挂载点现在依然可以在mount命令中看到
-	//print("path" + pivotDir)
-	//print("root" + root)
-	//syscall.Chroot(root)
+	// print("path" + pivotDir)
+	// print("root" + root)
+	// syscall.Chroot(root)
 	if err := syscall.PivotRoot(root, pivotDir); err != nil {
 		print("failed")
 		fmt.Print(err)
@@ -131,7 +137,7 @@ func pivotRoot(root string) error {
 		return fmt.Errorf("unmount pivot_root dir %v", err)
 	}
 	// 删除临时文件夹
-	//defer os.Remove(pivotDir)
+	// defer os.Remove(pivotDir)
 	return os.Remove(pivotDir)
-	//return nil
+	// return nil
 }

@@ -1,4 +1,4 @@
-package main
+package container
 
 /*
 此部分代码用于完善容器文件系统，包括创建只读层、创建挂载点和创建可写层
@@ -14,6 +14,8 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+
+	"c-docker/config"
 )
 
 // 将busybox.tar解压到busybox目录下，作为容器的只读层
@@ -47,7 +49,7 @@ func CreateVolumeLayer(volume string, containerName string) {
 				}
 			}
 			containerUrl := volumeURLs[1]
-			mntURL := fmt.Sprintf(MntUrl, containerName)
+			mntURL := fmt.Sprintf(config.MntUrl, containerName)
 			containerVolumeURL := path.Join(mntURL, containerUrl)
 			if err := os.MkdirAll(containerVolumeURL, 0777); err != nil {
 				log.Infof("MkdirAll container dir %s error.%v", containerVolumeURL, err)
@@ -71,9 +73,9 @@ func CreateVolumeLayer(volume string, containerName string) {
 
 // 这些函数在错误处理方面实现的不是很好
 func CreateReadOnlyLayer(imageName string) {
-	unTarFolderUrl := fmt.Sprintf(ImageUrl, imageName)
+	unTarFolderUrl := fmt.Sprintf(config.ImageUrl, imageName)
 	log.Infof("tar folder: %s", unTarFolderUrl)
-	imageUrl := RootUrl + "/" + imageName + ".tar"
+	imageUrl := config.RootUrl + "/" + imageName + ".tar"
 	exist, err := PathExists(unTarFolderUrl)
 	if err != nil {
 		log.Infof("Fail to judge whether dir %s exists. %v", unTarFolderUrl, err)
@@ -90,29 +92,29 @@ func CreateReadOnlyLayer(imageName string) {
 }
 
 func CreateWorkLayer(containerName string) {
-	writeURL := fmt.Sprintf(WorkUrl, containerName)
+	writeURL := fmt.Sprintf(config.WorkUrl, containerName)
 	if err := os.MkdirAll(writeURL, 0777); err != nil {
 		log.Errorf("MkdirAll dir %s error. %v", writeURL, err)
 	}
 }
 
 func CreateWriteLayer(containerName string) {
-	writeURL := fmt.Sprintf(WriteLayerUrl, containerName)
+	writeURL := fmt.Sprintf(config.WriteLayerUrl, containerName)
 	if err := os.MkdirAll(writeURL, 0777); err != nil {
 		log.Errorf("MkdirAll dir %s error. %v", writeURL, err)
 	}
 }
 
 func CreateMountPoint(containerName string, imageName string) {
-	mntUrl := fmt.Sprintf(MntUrl, containerName)
+	mntUrl := fmt.Sprintf(config.MntUrl, containerName)
 	// log.Infof("root url: %s; ygh testing: %s, mnt url: %s", RootUrl, rootUrl, mntUrl)
 	if err := os.MkdirAll(mntUrl, 0777); err != nil {
 		log.Errorf("MkdirAll dir %s error. %v", mntUrl, err)
 	}
 
-	imageUrl := fmt.Sprintf(ImageUrl, imageName)
-	writeLayer := fmt.Sprintf(WriteLayerUrl, containerName)
-	workUrl := fmt.Sprintf(WorkUrl, containerName)
+	imageUrl := fmt.Sprintf(config.ImageUrl, imageName)
+	writeLayer := fmt.Sprintf(config.WriteLayerUrl, containerName)
+	workUrl := fmt.Sprintf(config.WorkUrl, containerName)
 	dirs := "lowerdir=" + imageUrl + ",upperdir=" + writeLayer + ",workdir=" + workUrl
 	println(dirs)
 
@@ -138,7 +140,7 @@ func DeleteWorkSpace(volume string, containerName string) {
 }
 
 func DeleteMountPoint(containerName string) {
-	mntURL := fmt.Sprintf(MntUrl, containerName)
+	mntURL := fmt.Sprintf(config.MntUrl, containerName)
 	cmd := exec.Command("umount", mntURL)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -153,7 +155,7 @@ func DeleteMountPoint(containerName string) {
 }
 
 func DeleteWriteLayer(containerName string) {
-	writeURL := fmt.Sprintf(WriteLayerUrl, containerName)
+	writeURL := fmt.Sprintf(config.WriteLayerUrl, containerName)
 	if err := os.RemoveAll(writeURL); err != nil {
 		log.Errorf("Remove dir %s error %v", writeURL, err)
 	}
@@ -161,7 +163,7 @@ func DeleteWriteLayer(containerName string) {
 
 // 其实不是删除，只是卸载了这个目录
 func DeleteVolumeLayer(volumeURLs []string, containerName string) {
-	mntURL := fmt.Sprintf(MntUrl, containerName)
+	mntURL := fmt.Sprintf(config.MntUrl, containerName)
 	length := len(volumeURLs)
 	if length == 2 && volumeURLs[0] != "" && volumeURLs[1] != "" {
 		parentUrl := volumeURLs[0]

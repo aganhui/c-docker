@@ -5,12 +5,14 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+
+	"c-docker/config"
 )
 
 const usage = `这是一个容器引擎`
 
 func main() {
-	globalExeLocation, _ = os.Getwd()
+	config.GlobalExeLocation, _ = os.Getwd()
 	app := cli.NewApp()
 	app.Name = "c-docker"
 	app.Usage = usage

@@ -5,6 +5,9 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
+
+	"c-docker/config"
+	"c-docker/container"
 )
 
 /*
@@ -15,16 +18,16 @@ import (
 4.移除记录容器信息的地址
 */
 func removeContainer(containerName string) {
-	containerInfo, err := getContainerInfoByName(containerName)
+	containerInfo, err := container.GetContainerInfoByName(containerName)
 	if err != nil {
 		log.Errorf("Get container %s info error %v", containerName, err)
 		return
 	}
-	if containerInfo.Status != STOP {
+	if containerInfo.Status != container.STOP {
 		log.Errorf("Couldn't remove running container")
 		return
 	}
-	dirURL := fmt.Sprintf(globalDefaultInfoLocation, containerName)
+	dirURL := fmt.Sprintf(config.GlobalDefaultInfoLocation, containerName)
 	if err := os.RemoveAll(dirURL); err != nil {
 		log.Errorf("Remove file %s error %v", dirURL, err)
 		return

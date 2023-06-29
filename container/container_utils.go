@@ -1,4 +1,4 @@
-package main
+package container
 
 import (
 	"encoding/json"
@@ -12,6 +12,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"c-docker/config"
 )
 
 /*
@@ -34,11 +36,11 @@ var (
 	RUNNING             string = "running"
 	STOP                string = "stopped"
 	Exit                string = "exited"
-	DefaultInfoLocation string = globalDefaultInfoLocation
-	ConfigName          string = globalConfigName
+	DefaultInfoLocation string = config.GlobalDefaultInfoLocation
+	ConfigName          string = config.GlobalConfigName
 )
 
-func recordContainerInfo(
+func RecordContainerInfo(
 	containerPID int,
 	commandArray []string,
 	containerName string,
@@ -96,7 +98,7 @@ func recordContainerInfo(
 	return containerName, nil
 }
 
-func deleteContainerInfo(containerName string) {
+func DeleteContainerInfo(containerName string) {
 	dirURL := fmt.Sprintf(DefaultInfoLocation, containerName)
 	log.Info("Delete Dir %s", dirURL)
 	if err := os.RemoveAll(dirURL); err != nil {
@@ -107,7 +109,7 @@ func deleteContainerInfo(containerName string) {
 /*
 一个随机生成器，可以随机表示n位的数字
 */
-func randStringBytes(n int) string {
+func RandStringBytes(n int) string {
 	letterBytes := "1234567890"
 	rand.Seed(time.Now().UnixNano())
 	b := make([]byte, n)
@@ -117,10 +119,10 @@ func randStringBytes(n int) string {
 	return string(b)
 }
 
-func getContainerInfo(containerName string) (*ContainerInfo, error) {
+func GetContainerInfo(containerName string) (*ContainerInfo, error) {
 	// containerName := file.Name()
 	configFileDir := fmt.Sprintf(DefaultInfoLocation, containerName)
-	configFileDir = path.Join(configFileDir, globalConfigName)
+	configFileDir = path.Join(configFileDir, config.GlobalConfigName)
 	content, err := ioutil.ReadFile(configFileDir)
 	if err != nil {
 		log.Errorf("Read file %s error %v", configFileDir, err)
@@ -134,9 +136,9 @@ func getContainerInfo(containerName string) (*ContainerInfo, error) {
 	return &containerInfo, nil
 }
 
-func getContainerPidByName(containerName string) (string, error) {
-	dirURL := fmt.Sprintf(globalDefaultInfoLocation, containerName)
-	configFilePath := path.Join(dirURL, globalConfigName)
+func GetContainerPidByName(containerName string) (string, error) {
+	dirURL := fmt.Sprintf(config.GlobalDefaultInfoLocation, containerName)
+	configFilePath := path.Join(dirURL, config.GlobalConfigName)
 	contentBytes, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
 		return "", err
@@ -156,10 +158,10 @@ func getContainerPidByName(containerName string) (string, error) {
 }
 
 // 根据容器名获取对应的struct结构
-func getContainerInfoByName(containerName string) (*ContainerInfo, error) {
+func GetContainerInfoByName(containerName string) (*ContainerInfo, error) {
 	// dirURL := fmt.Sprintf(DefaultInfoLocation, containerName)
 	// configFilePath := path.Join(dirURL, globalConfigName)
-	containerinfo, err := getContainerInfo(containerName)
+	containerinfo, err := GetContainerInfo(containerName)
 	if err != nil {
 		log.Errorf("GetContainerInfoByNameFailed%v", err)
 		return nil, err

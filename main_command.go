@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
+	"c-docker/container"
 	"c-docker/network"
 )
 
@@ -154,7 +155,7 @@ var initCommand = cli.Command{
 	Usage: "Init container process run user's process in container. Do not call it outside",
 	Action: func(context *cli.Context) error {
 		log.Infof("init come on")
-		err := RunContainerInitProcess()
+		err := container.RunContainerInitProcess()
 		fmt.Print(err)
 		return err
 	},
@@ -166,7 +167,7 @@ var listCommand = cli.Command{
 	Action: func(context *cli.Context) error {
 		// ListContainers()
 		// 找到存储容器信息的路径/var/run/mydocker
-		dirURL := fmt.Sprintf(DefaultInfoLocation, "")
+		dirURL := fmt.Sprintf(container.DefaultInfoLocation, "")
 		dirURL = dirURL[:len(dirURL)-1]
 		// 读取该文件夹下的所有文件
 		files, err := ioutil.ReadDir(dirURL)
@@ -174,9 +175,9 @@ var listCommand = cli.Command{
 			log.Errorf("Read dir %s error %v", dirURL, err)
 			return nil
 		}
-		var containers []*ContainerInfo
+		var containers []*container.ContainerInfo
 		for _, file := range files {
-			tmpContainer, err := getContainerInfo(file.Name())
+			tmpContainer, err := container.GetContainerInfo(file.Name())
 			if err != nil {
 				log.Errorf("Get container info error %v", err)
 				continue
@@ -234,7 +235,7 @@ var execCommand = cli.Command{
 			for _, arg := range context.Args().Tail() {
 				commandArray = append(commandArray, arg)
 			}
-			pid, err := getContainerPidByName(containerName)
+			pid, err := container.GetContainerPidByName(containerName)
 			if err != nil {
 				log.Errorf("get container pid by name failed%v", err)
 				return nil

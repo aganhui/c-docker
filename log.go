@@ -7,6 +7,8 @@ import (
 	"path"
 
 	log "github.com/sirupsen/logrus"
+
+	"c-docker/config"
 )
 
 /*
@@ -14,8 +16,8 @@ import (
 */
 
 func logContainer(containerName string) {
-	dirURL := fmt.Sprintf(globalDefaultInfoLocation, containerName)
-	logFileLocation := path.Join(dirURL, globalLogName)
+	dirURL := fmt.Sprintf(config.GlobalDefaultInfoLocation, containerName)
+	logFileLocation := path.Join(dirURL, config.GlobalLogName)
 	file, err := os.Open(logFileLocation)
 	defer file.Close()
 	if err != nil {
@@ -28,5 +30,4 @@ func logContainer(containerName string) {
 		return
 	}
 	fmt.Fprintf(os.Stdout, string(content))
-
 }

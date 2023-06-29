@@ -11,6 +11,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"c-docker/config"
+	"c-docker/container"
 	"c-docker/network"
 )
 
@@ -46,14 +48,14 @@ func NewParentProcess(
 		//cmd.Stdout = file
 		//cmd.Stderr = file
 		//重定向到配置目录对应的container.log文件
-		dirURL := fmt.Sprintf(globalDefaultInfoLocation, containerName)
+		dirURL := fmt.Sprintf(config.GlobalDefaultInfoLocation, containerName)
 		if err := os.MkdirAll(dirURL, 0622); err != nil {
 			log.Errorf("NewParentProcess mkdir %s error %v", dirURL, err)
 			return nil, nil
 		}
 		// log.Info("pathName%s", globalLogName)
 		log.Info("dirurl%s", containerName)
-		stdLogFilePath := path.Join(dirURL, globalLogName)
+		stdLogFilePath := path.Join(dirURL, config.GlobalLogName)
 		// log.Info("build config in dir %s", stdLogFilePath)
 		stdLogFile, err := os.Create(stdLogFilePath)
 		if err != nil {
@@ -71,9 +73,9 @@ func NewParentProcess(
 		这两个变量穿插在两个函数间，很有可能使得后面维护困难，可以做修改
 	*/
 
-	NewWorkSpace(volume, imageName, containerName)
+	container.NewWorkSpace(volume, imageName, containerName)
 
-	cmd.Dir = fmt.Sprintf(MntUrl, containerName)
+	cmd.Dir = fmt.Sprintf(config.MntUrl, containerName)
 
 	cmd.ExtraFiles = []*os.File{readPipe}
 	return cmd, writePipe
@@ -89,7 +91,7 @@ func Run(
 	nw string,
 	portmapping []string,
 ) {
-	containerId := randStringBytes(10)
+	containerId := container.RandStringBytes(10)
 	if containerName == "" {
 		containerName = containerId
 	}
@@ -103,7 +105,7 @@ func Run(
 		log.Error(err)
 	}
 	// 记录容器信息
-	containerName, err := recordContainerInfo(
+	containerName, err := container.RecordContainerInfo(
 		parent.Process.Pid,
 		comArray,
 		containerName,
@@ -128,7 +130,7 @@ func Run(
 	if nw != "" {
 		// config container network
 		network.Init()
-		containerInfo := &network.ContainerInfo{
+		containerInfo := &container.ContainerInfo{
 			Id:          containerId,
 			Pid:         strconv.Itoa(parent.Process.Pid),
 			Name:        containerName,
@@ -141,9 +143,9 @@ func Run(
 	}
 	if tty {
 		parent.Wait()
-		os.Chdir(globalExeLocation)
-		DeleteWorkSpace(volume, containerName)
-		deleteContainerInfo(containerName)
+		os.Chdir(config.GlobalExeLocation)
+		container.DeleteWorkSpace(volume, containerName)
+		container.DeleteContainerInfo(containerName)
 
 	}
 
