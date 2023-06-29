@@ -37,7 +37,7 @@ var (
 	ConfigName          string = globalConfigName
 )
 
-func recordContainerInfo(containerPID int, commandArray []string, containerName string, id string,volume string) (string, error) {
+func recordContainerInfo(containerPID int, commandArray []string, containerName string, id string, volume string) (string, error) {
 	//首先生成10位的数字的容器ID
 	//id := randStringBytes(10)
 	//以当前时间为容器创建时间
@@ -92,6 +92,7 @@ func recordContainerInfo(containerPID int, commandArray []string, containerName 
 
 func deleteContainerInfo(containerName string) {
 	dirURL := fmt.Sprintf(DefaultInfoLocation, containerName)
+	log.Info("Delete Dir %s", dirURL)
 	if err := os.RemoveAll(dirURL); err != nil {
 		log.Errorf("Remove dir %s error %v", dirURL, err)
 	}

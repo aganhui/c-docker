@@ -29,3 +29,5 @@ var (
 	imageTarName = "busybox.tar" // 镜像文件的名称
 	imageName    = "busybox"     // 镜像文件解压的目录名
 )
+
+var globalExeLocation = ""

@@ -49,6 +49,7 @@ __attribute__((constructor)) void enter_namespace(void) {
 
 }
 */
+import "C"
 
 var runCommand = cli.Command{
 	Name: "run",
@@ -108,7 +109,7 @@ var runCommand = cli.Command{
 		}
 		volume := context.String("v")
 		containerName := context.String("name")
-		Run(tty, cmdArray, resourceConf, volume, containerName,imageName)
+		Run(tty, cmdArray, resourceConf, volume, containerName, imageName)
 		//Run(tty, cmdArray)
 		return nil
 	},
@@ -124,7 +125,6 @@ var initCommand = cli.Command{
 		return err
 	},
 }
-
 
 var listCommand = cli.Command{
 	Name:  "ps",
@@ -188,7 +188,7 @@ var execCommand = cli.Command{
 	Name:  "exec",
 	Usage: "exec a command into cotainer",
 	Action: func(context *cli.Context) error {
-
+		log.Info("ExecCommand Run")
 		//如果没有设置pid，那么ns切换将不能实现，需要先设置然后再继续
 		if os.Getenv("mycontainer_pid") == "" {
 			if len(context.Args()) < 2 {

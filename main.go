@@ -11,6 +11,7 @@ import (
 const usage = `这是一个容器引擎`
 
 func main() {
+	globalExeLocation, _ = os.Getwd()
 	app := cli.NewApp()
 	app.Name = "c-docker"
 	app.Usage = usage

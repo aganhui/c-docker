@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewParentProcess(tty bool, containerName string, volume string,imageName string) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool, containerName string, volume string, imageName string) (*exec.Cmd, *os.File) {
 	//args := []string{"init", command}
 	//创建新的管道
 	readPipe, writePipe, err := NewPipe()
@@ -62,22 +62,22 @@ func NewParentProcess(tty bool, containerName string, volume string,imageName st
 		TODO
 		这两个变量穿插在两个函数间，很有可能使得后面维护困难，可以做修改
 	*/
-	
-	NewWorkSpace(volume,imageName,containerName)
 
-	cmd.Dir = fmt.Sprintf(MntUrl,containerName)
+	NewWorkSpace(volume, imageName, containerName)
+
+	cmd.Dir = fmt.Sprintf(MntUrl, containerName)
 
 	cmd.ExtraFiles = []*os.File{readPipe}
 	return cmd, writePipe
 }
 
-func Run(tty bool, comArray []string, res *ResourceConfig, volume string, containerName string,imageName string) {
+func Run(tty bool, comArray []string, res *ResourceConfig, volume string, containerName string, imageName string) {
 
 	containerId := randStringBytes(10)
 	if containerName == "" {
 		containerName = containerId
 	}
-	parent, writePipe := NewParentProcess(tty, containerName,volume,imageName)
+	parent, writePipe := NewParentProcess(tty, containerName, volume, imageName)
 	if parent == nil {
 		log.Errorf("New parent process error")
 		return
@@ -87,7 +87,7 @@ func Run(tty bool, comArray []string, res *ResourceConfig, volume string, contai
 		log.Error(err)
 	}
 	//记录容器信息
-	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName, containerId,volume)
+	containerName, err := recordContainerInfo(parent.Process.Pid, comArray, containerName, containerId, volume)
 	if err != nil {
 		log.Errorf("Record container info error %v", err)
 		return
@@ -105,8 +105,10 @@ func Run(tty bool, comArray []string, res *ResourceConfig, volume string, contai
 	cgroupmanager.Apply(parent.Process.Pid)
 	if tty {
 		parent.Wait()
-		DeleteWorkSpace(volume,containerName)
+		os.Chdir(globalExeLocation)
+		DeleteWorkSpace(volume, containerName)
 		deleteContainerInfo(containerName)
+
 	}
 
 	os.Exit(0)
